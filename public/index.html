@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+  <title>Chat App</title>
+</head>
+
+<body>
+
+  <!-- //messages container -->
+  <div class="container">
+    <!-- <div class="messages right"></div>
+    <div class="messages left"></div> -->
+  </div>
+
+  <!-- message send container -->
+  <div class="sendContainer">
+    <input type="text" placeholder="Message" id="messageInput">
+    <button id="sendButton">Send</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    const container = document.querySelector('.container');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+var audio=new Audio('Message Tone.mp3')
+
+    const append = (message, position) => {
+      const messageElement = document.createElement('div');
+      messageElement.innerText = message;
+      messageElement.classList.add('messages');
+      messageElement.classList.add(position);
+      container.appendChild(messageElement);
+      if(position=='left'){
+        audio.play();
+      }
+    }
+
+    sendButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      const message = messageInput.value;
+      append(`You: ${message}`, 'right');
+      socket.emit('message', message);
+      messageInput.value = '';
+    })
+
+
+    const name = prompt('Enter your name to join the chat: ');
+    socket.emit('new-user-joined', name);
+
+    socket.on('user-joined', name => {
+      append(`${name} Joined the chat`, 'right');
+    })
+
+    socket.on('received', data => {
+      append(`${name}: ${data.message}`, 'left');
+    })
+
+    socket.on('user-disconnect', name => {
+      append(`${name}: Left the chat`, 'left');
+    })
+
+  </script>
+</body>
+
+</html>
